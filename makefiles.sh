@@ -1,7 +1,8 @@
-        cd
-        mkdir stuff
+        sudo mkdir -p /data/public/stuff1
+	sudo mkdir -p /data/public/stuff2
 
-        for i in {1..5}
+        for i in {1..10}
         do
-                dd if=/dev/zero of=/home/$USER/stuff/some_file$i bs=10MB count=1
+               sudo dd if=/dev/zero of=/data/public/stuff1/some_file$i bs=10MB count=1
+	       sudo dd if=/dev/zero of=/data/public/stuff2/some_file$i bs=10MB count=1
         done
