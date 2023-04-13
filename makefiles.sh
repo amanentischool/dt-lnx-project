@@ -9,13 +9,12 @@
 
 	# HELPERS
 
-	# Boolean and while loop keeps calling nested create function. Allows user to add optional folders until the are finished.
+	# Boolean and while loop keeps calling nested create function. Allows user to add optional folders until they are finished.
         create_additional_folders() {
           should_continue=true
 
           create() {
-            for folder in "${optional_folders[@]}"
-            do
+            for folder in "${optional_folders[@]}" do
               sudo mkdir -p /data/groups/$folder
             done
               echo Okay! Our work here is done.
@@ -38,7 +37,7 @@
 	  case $yn in 
 	    [yY] ) create_additional_folders;;
 	    [nN] ) echo Great! our work here is finished!;;
-	    * ) echo invalid response;;
+	       * ) echo invalid response;;
           esac
 	}
 	
@@ -80,7 +79,7 @@
 	  case $yn in 
 	    [yY] ) sudo rm -rf /data/public/stuff1; sudo rm -rf /data/public/stuff2;;
 	    [nN] ) echo aborting script;;
-	    * ) echo invalid response;;
+	       * ) echo invalid response;;
           esac
 	fi
 
@@ -98,6 +97,6 @@
           case $yn in
             [yY] ) make_folders;;
             [nN] ) echo Okay! Our work here is done.;;
-            * ) echo invalid response;;
+               * ) echo invalid response;;
           esac
 	
