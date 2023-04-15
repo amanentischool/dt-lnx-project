@@ -1,5 +1,7 @@
 # Anthony Manenti - NOS125-150 SP23
-# Interactive Shell program combining all of our script and setup tasks into a fun lil' ride. Weee. 
+# Shell script for file and folder creation.
+
+## MARK: FILE AND FOLDER CREATION
 
 # Create additional folders if user wants folders outside of defaults.
 create_additional_folders() {
@@ -35,8 +37,11 @@ prompt_for_additional_folders() {
     read -p "Default folders created! Would you like to create additional folders? (y/n) " yn
     case $yn in
     [yY]) create_additional_folders ;;
-    [nN]) echo Great! our work here is finished! ;;
-    *) echo invalid response ;;
+    [nN])
+        echo "Great! our work here is finished!"
+        his_name_is_callboy
+        ;;
+    *) echo "invalid response; prompt_for_additional_folders" ;;
     esac
 }
 
@@ -52,7 +57,7 @@ make_folders() {
 validate_num() {
     isnum='^[0-9]+$'
     if ! [[ $1 =~ $isnum ]]; then
-        echo "error: Not a number.Try again."
+        echo error: Not a number. Try again.
         sleep 1
         $2
     else
@@ -61,21 +66,25 @@ validate_num() {
     fi
 }
 
-# Ask user if they want the default folders. If they indicate yes, we make them.
+# Ask user if they want the default folders.
 prompt_for_folders() {
     read -p "Would you like to create a set of default folders in data/groups? (y/n) " yn
     case $yn in
     [yY]) make_folders ;;
-    [nN]) echo Okay! Our work here is done. ;;
-    *) echo invalid response ;;
+    [nN])
+        echo Okay! Our work here is done.
+        his_name_is_call_boy
+        ;;
+    *)
+        echo invalid response
+        prompt_for_folders
+        ;;
     esac
 }
 
 # Create the files and call the prompt which allows users to decide if they want default folders created.
 create_files() {
-    echo "is at create_files"
     sudo mkdir -p /data/public/stuff{1,2}
-    # Loop through and create N specified number of files in both created directories
     for i in $(seq 1 $N); do
         sudo dd if=/dev/zero of=/data/public/stuff1/some_file$i bs=$S count=1
         sudo dd if=/dev/zero of=/data/public/stuff2/some_file$i bs=$S count=1
@@ -95,11 +104,8 @@ test_existing_files() {
             sudo rm -rf /data/public/stuff{1,2}
             create_files
             ;;
-        [nN])
-            echo exiting script now
-            exit 1
-            ;;
-        *) echo invalid response ;;
+        [nN]) his_name_is_callboy ;;
+        *) test_existing_files ;;
         esac
     else
         create_files
@@ -120,32 +126,94 @@ kick_off_flow() {
     validate_num $N kick_off_flow get_file_size
 }
 
+## MARK: HOSTNAMES
+
+# Allows user to set hostname
+set_hostname() {
+    inval_guard=true
+    read -p "Please enter your hostname : " hostname
+    while $inval_guard; do
+        read -p "Your new hostname will be : $hostname. Please confirm this change. (y/n) (q: quit without saving) " ynq
+        case $ynq in
+        [yY])
+            inval_guard=false
+            echo "Changing hostname now" hostnamectl set-hostname $hostname
+            his_name_is_callboy
+            ;;
+        [nN])
+            inval_guard=false
+            echo "Okay, let's try again."
+            set_hostname
+            ;;
+        [qQ])
+            inval_guard=false
+            his_name_is_callboy
+            ;;
+        *) echo invalid response ;;
+        esac
+    done
+}
+
+## MARK: NETWORKING
+
+### TODO: logic for formatting nmcli
+network_config_wizard() {
+    echo "I need to build this"
+}
+
+# allows user to use our wizard for network config through nmcli command formatting, or opt to use nmcli
+configure_networking() {
+    clear
+    echo -e "\n1) I want to use this script to configure network settings \n2) I want to use nmtui to configure network settings \n3) Quit \n"
+    read -p "How can I help you today? " input
+    case $input in
+    1)
+        network_config_wizard
+        ;;
+    2)
+        nmtui
+        ;;
+    3)
+        his_name_is_call_boy
+        ;;
+    *)
+        echo "invalid option"
+        configure_networking
+        ;;
+    esac
+}
+
+## MARK: CALLER
+
 # Gives us the multi option prompt and allows us to call functions as we need them.
 # This kind of pattern is useful, because it allows us to block everything away and work on one piece at a time.
 # We don't have to worry about massive entangled blocks. It's a caller basically.
 his_name_is_callboy() {
-    echo -e "\n1) Create Files and Folders\n2) Create Optional Folders\n3) Do This Later\n4) Quit)"
+    clear
+    echo -e "\n1) Set Hostname\n2) Create Files and Folders\n3) Create Optional Folders\n4) Configure Networking\n5) Quit)\n"
     read -p "Welcome! What would you like to do? " input
     case $input in
     1)
-        echo "Very well. Let's get to work, shall we?"
-        kick_off_flow
+        set_hostname
         ;;
     2)
-        echo "Alrighty... here we go"
-        create_additional_folders
+        kick_off_flow
         ;;
     3)
-        echo "Well. I don't know what to do with this."
-        # optionally call a function or run some code here
+        create_additional_folders
         ;;
     4)
-        echo "I'm so lonely."
+        configure_networking
+        ;;
+    5)
         exit
         ;;
-    *) echo "invalid option $REPLY" ;;
+    *)
+        echo "invalid option"
+        sleep 1
+        his_name_is_callboy
+        ;;
     esac
 }
 
-# He is the one who calls.
 his_name_is_callboy
