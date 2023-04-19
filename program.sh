@@ -177,6 +177,7 @@ set_hostname() {
 }
 
 # MARK: NETWORKING
+# IP Validation Regex (https://stackoverflow.com/questions/5284147/validating-ipv4-addresses-with-regexp)
 
 # Ask user if they want to bring the modified interface profile up. Warn that they may be disconnected.
 prompt_interface_up() {
