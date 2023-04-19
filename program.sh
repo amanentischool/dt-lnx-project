@@ -1,9 +1,9 @@
 # Anthony Manenti - NOS125-150 SP23
 # Interactive shell script combining all scripting and config tasks for NOS125.
 
-# NOTE: I am relatively new at shell scripting. I barely remember how to write loops... but I do understand how flow works in programming languages, and I understand the structures and patterns I need to do certain tasks. 
+# NOTE: I am relatively new at shell scripting. I barely remember how to write loops... but I do understand how flow works in programming languages, and I understand the structures and patterns I need to do certain tasks.
 # This script was put together with a lot of head scratching, trial and error, and googling. THANK YOU Linux forums and StackOverflow ... and Github!
-# Please feel free to use this script as a reference, to build upon it, and improve it. 
+# Please feel free to use this script as a reference, to build upon it, and improve it.
 
 #TODOS:
 # 1) Generally my input validation on the case statements in the script feels a bit clunky. (using booleans and while loops) There is likely a more efficent means of doing this.
@@ -12,13 +12,13 @@
 # 4) A readme would be nice.
 # 5) Creating an ssh config file after generating an ssh key for a user would be nice.
 # 6) Functionality for creating additional users, adding them as sudoers. Setting their passwords.
-# 7) IP address validation.
+# 7) IP address validation. (DONE)
 # 8) Automatic fdisk configuration by piping into fdisk. including automatic mkfs and mount.
 # 9) Option for user to be redirected to fdisk for manual config.
 # 10) Automatic echo /etc/fstab entry for dev/sdc1 so it gets mounted on reboot.
 # 11) Generally I think clearing the users terminal is a good thing. There may be certain sections where keeping some of the history visible is beneficial. Look into it and clean it up where needed.
 # 12) Make an array of Linux / Dad jokes and add a random joke picker function to the main menu where a random joke is picked and display.
-# 13) Option to install git. 
+# 13) Option to install git.
 
 # MARK: FILE AND FOLDER CREATION
 
@@ -186,10 +186,12 @@ prompt_interface_up() {
     [yY])
         sudo nmcli connection up static
         inval_guard=false
+        his_name_is_callboy
         ;;
     [nN])
         his_name_is_callboy
         inval_guard=false
+        his_name_is_callboy
         ;;
     *)
         echo "invalid response"
@@ -199,60 +201,28 @@ prompt_interface_up() {
     esac
 }
 
-# Prompt by Prompt network config wizard with nested function for displaying settings table and applying with nmcli. 
-network_config_wizard() {
-    local inval_guard=true
-
-    confirm_net_config() {
-        clear
-        printf "%-15s %-15s %-15s %-15s\n" "IP" "Gateway" "DNS" "Interface"
-        printf "%-10s %-10s %-10s %-10s\n" "$1" "$2" "$3" "$4"
-
-        read -p "Please confirm you configuration before applying " confirm
-        case $confirm in
-        [yY])
-            if [ -z "$3" ]; then
-                sudo nmcli connection add con-name static type ethernet ifname "$4" ipv4.addresses "$1" ipv4.gateway "$2" ipv4.method manual
-            else
-                sudo nmcli connection add con-name static type ethernet ifname "$4" ipv4.addresses "$1" ipv4.gateway "$2" ipv4.dns "$3" ipv4.method manual
-            fi
-            prompt_interface_up
-            ;;
-        [nN])
-            network_config_wizard
-            ;;
-        *)
-            echo "invalid response"
-            sleep 1
-            confirm_net_config
-            ;;
-        esac
-    }
-
-    echo "Please enter your IP address, and include your subnet mask in /xx format at the end of the address "
-    read ip
-    clear
-
-    echo "Please enter your gateway address "
-    read gw
-    clear
-
-    # This is running the IP link command and then using AWK to find the first line that starts with a number, followed by a colon and then a space and then the letter e. Which is the interface name we want to change.
-    iface=$(ip link | awk -F': ' '/^[0-9]+: e/{print $2; exit}')
-
+# prompt for optional dns address, if valid, send to confirm, if user opts out, send to confirm with nil dns variable.
+input_dns() {
+    inval_guard=true
     while $inval_guard; do
-        read -p "Do you want to override the system default DNS settings? " custdns
-        case $custdns in
+        read -p "Do you want to override the system default DNS settings? (y/n) " yn
+        case $yn in
         [yY])
-            echo "Enter your custom DNS address "
-            read dns
-            inval_guard=false
-            confirm_net_config "$ip" "$gw" "$dns" "$iface"
+            # Not super DRY here. we're repeating logic we already have, but this is easier than redirecting for now.
+            read -p "Enter your custom DNS address " dns
+            if [[ $dns =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                inval_guard=false
+                confirm_net_config "$1" "$2" "$dns"
+            else
+                echo "Invalid IP address."
+                sleep 1
+                clear
+            fi
             ;;
         [nN])
             $dns=""
             inval_guard=false
-            confirm_net_config "$ip" "$gw" "$dns" "$iface"
+            confirm_net_config "$1" "$2" "$dns"
             ;;
         *)
             echo "invalid response"
@@ -262,6 +232,67 @@ network_config_wizard() {
     done
 }
 
+# prompt for and validate gateway address, send to optional dns function if valid, else prompt again.
+input_gateway_address() {
+    read -p "Enter your gateway IP address: " gw
+    if [[ $gw =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        input_dns "$1" "$gw"
+    else
+        echo "Invalid IP address."
+        sleep 1
+        input_gateway_address
+    fi
+}
+
+# prompt for and validate ip address, send to gateway address function if valid. else prompt again.
+input_ip_address() {
+    read -p "Enter an IP address with CIDR notation (e.g., 192.168.1.0/24): " ip
+    if [[ $ip =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[1-2][0-9]|3[0-2])$ ]]; then
+        input_gateway_address "$ip"
+    else
+        echo "Invalid IP address. Try again"
+        sleep 1
+        input_ip_address
+    fi
+}
+
+# Creates a prompt which allows users to confirm their network config before applying.
+confirm_net_config() {
+    clear
+    # This is running the IP link command and then using AWK to find the first line that starts with a number, followed by a colon and then a space and then the letter e, which is the interface we want to change.
+    iface=$(ip link | awk -F': ' '/^[0-9]+: e/{print $2; exit}')
+    # print config back to user for confirmation.
+    echo
+    echo "IP : $1"
+    echo "Gateway : $2"
+    echo "DNS : $3"
+    echo "Interface : $iface"
+    echo
+
+    read -p "Please confirm you configuration before applying (y: confirm, n: restart config, or q: quit to main menu) " ynq
+    case $confirm in
+    [yY])
+        if [ -z "$3" ]; then
+            sudo nmcli connection add con-name static type ethernet ifname "$iface" ipv4.addresses "$1" ipv4.gateway "$2" ipv4.method manual
+        else
+            sudo nmcli connection add con-name static type ethernet ifname "$iface" ipv4.addresses "$1" ipv4.gateway "$2" ipv4.dns "$3" ipv4.method manual
+        fi
+        prompt_interface_up
+        ;;
+    [nN])
+        input_ip_address
+        ;;
+    [qQ])
+        his_name_is_callboy
+        ;;
+    *)
+        echo "invalid response"
+        sleep 1
+        confirm_net_config
+        ;;
+    esac
+}
+
 # allows user to use our wizard for network config through nmcli command formatting, or opt to use nmcli
 configure_networking() {
     clear
@@ -269,7 +300,7 @@ configure_networking() {
     read -p "How can I help you today? " input
     case $input in
     1)
-        network_config_wizard
+        input_ip_address
         ;;
     2)
         nmtui
