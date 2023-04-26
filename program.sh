@@ -316,6 +316,25 @@ configure_networking() {
     esac
 }
 
+delete_all_files() {
+    clear
+    read -p "This will remove all files and folder from /data/public and /data/groups. Are you sure you want to do this? (y/n) " yn
+    case $yn in
+    [Yy])
+        sudo rm -rf /data/public
+        sudo rm -rf /data/groups
+        ;;
+    [Nn])
+        his_name_is_callboy
+        ;;
+    *)
+        echo "invalid option"
+        sleep 1
+        delete_all_files
+        ;;
+    esac
+}
+
 ## MARK: CALLER
 
 # Gives us the multi option prompt and allows us to call functions as we need them.
@@ -323,7 +342,7 @@ configure_networking() {
 # We don't have to worry about massive entangled blocks. It's a caller basically.
 his_name_is_callboy() {
     clear
-    echo -e "\n1) Set Hostname\n2) Create Files and Folders\n3) Create Optional Folders\n4) Configure Networking\n5) Quit)\n"
+    echo -e "\n1) Set Hostname\n2) Create Files and Folders\n3) Create Optional Folders\n4) Configure Networking\n5) Delete folders and files\n6) Quit)\n"
     read -p "Welcome! What would you like to do? " input
     case $input in
     1)
@@ -339,8 +358,11 @@ his_name_is_callboy() {
         configure_networking
         ;;
     5)
-        exit
+        delete_all_files
         ;;
+    6) 
+        exit
+        ;; 
     *)
         echo "invalid option"
         sleep 1
