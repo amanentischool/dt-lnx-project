@@ -24,6 +24,7 @@
 
 # Create additional folders if user wants folders outside of defaults.
 create_additional_folders() {
+    clear
     optional_folders=()
     should_continue=true
 
@@ -31,8 +32,10 @@ create_additional_folders() {
         for folder in "${optional_folders[@]}"; do
             sudo mkdir -p /data/groups/$folder
         done
-        echo Okay! Our work here is done.
         should_continue=false
+        echo Okay! Our work here is done.
+        sleep 1
+        his_name_is_callboy
     }
 
     # Push to optional folders array unless user inputs 'done'
@@ -323,6 +326,7 @@ delete_all_files() {
     [Yy])
         sudo rm -rf /data/public
         sudo rm -rf /data/groups
+        his_name_is_callboy
         ;;
     [Nn])
         his_name_is_callboy
