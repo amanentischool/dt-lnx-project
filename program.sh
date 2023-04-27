@@ -10,15 +10,15 @@
 # 2) I may be overusing the case statements. It works ... and it's easy, but still.
 # 3) It would be really cool if I could figure out how to launch a program like nmtui or fdisk and return the user back to my script once they are done.
 # 4) A readme would be nice.
-# 5) Creating an ssh config file after generating an ssh key for a user would be nice.
+# 5) Creating an ssh config file after generating an ssh key for a user would be nice. (DONE)
 # 6) Functionality for creating additional users, adding them as sudoers. Setting their passwords.
 # 7) IP address validation. (DONE)
 # 8) Automatic fdisk configuration by piping into fdisk. including automatic mkfs and mount.
 # 9) Option for user to be redirected to fdisk for manual config.
 # 10) Automatic echo /etc/fstab entry for dev/sdc1 so it gets mounted on reboot.
-# 11) Generally I think clearing the users terminal is a good thing. There may be certain sections where keeping some of the history visible is beneficial. Look into it and clean it up where needed.
+# 11) Generally I think clearing the users terminal is a good thing. There may be certain sections where keeping some of the history visible is beneficial. Look into it and clean it up where needed. (DONE)
 # 12) Make an array of Linux / Dad jokes and add a random joke picker function to the main menu where a random joke is picked and display.
-# 13) Option to install git.
+# 13) Option to install git. (DONE)
 
 # MARK: FILE AND FOLDER CREATION
 
@@ -35,7 +35,7 @@ create_additional_folders() {
         should_continue=false
         echo Okay! Our work here is done.
         sleep 1
-        his_name_is_callboy
+        call_menu
     }
 
     # Push to optional folders array unless user inputs 'done'
@@ -54,29 +54,19 @@ create_additional_folders() {
     done
 }
 
-# Flow control basically, call looping function to keep adding if yes, bounce em out if no.
-prompt_for_additional_folders() {
-    read -p "Default folders created! Would you like to create additional folders? (y/n) " yn
-    case $yn in
-    [yY]) create_additional_folders ;;
-    [nN])
-        echo "Great! our work here is finished!"
-        his_name_is_callboy
-        ;;
-    *) echo "invalid response; prompt_for_additional_folders" ;;
-    esac
-}
-
 # Creates default folders if user indicates they want them, and also starts stack for adding custom folders.
 make_folders() {
     paths=("sales" "marketing" "operations" "finance" "human_resources")
     for path in "${paths[@]}"; do
         sudo mkdir -p /data/groups/$path
     done
-    his_name_is_callboy
+    call_menu
 }
 
 # Gotta know if the user is actually inputting integers when we need em.
+# This function is reusable. Include the input you'd like to validate as the first param in the call.
+# Include the function you'd like to return back to as the second param in the call if unsuccesful
+# Include the function you'd like to move to as the third param in the call if successful and voila!
 validate_num() {
     isnum='^[0-9]+$'
     if ! [[ $1 =~ $isnum ]]; then
@@ -126,7 +116,7 @@ test_existing_files() {
             sudo rm -rf /data/public/stuff{1,2}
             create_files
             ;;
-        [nN]) his_name_is_callboy ;;
+        [nN]) call_menu ;;
         *) test_existing_files ;;
         esac
     else
@@ -135,17 +125,17 @@ test_existing_files() {
 }
 
 # Ask for file size in MB, send to validate.
-get_file_size() {
+prompt_file_size() {
     echo "How many MBs would you like the files to be? [must be an integer]. "
     read S
-    validate_num $S get_file_size test_existing_files
+    validate_num $S prompt_file_size test_existing_files
 }
 
 # Kicks off file and default folder creation chain, sends user input to validate.
-kick_off_flow() {
+prompt_num_files() {
     echo "How many files would you like to create? [must be an integer]. "
     read N
-    validate_num $N kick_off_flow get_file_size
+    validate_num $N prompt_num_files prompt_file_size
 }
 
 # MARK: HOSTNAMES
@@ -161,7 +151,7 @@ set_hostname() {
         [yY])
             inval_guard=false
             echo "Changing hostname now" hostnamectl set-hostname $hostname
-            his_name_is_callboy
+            call_menu
             ;;
         [nN])
             inval_guard=false
@@ -169,7 +159,7 @@ set_hostname() {
             ;;
         [qQ])
             inval_guard=false
-            his_name_is_callboy
+            call_menu
             ;;
         *)
             echo invalid response
@@ -190,12 +180,11 @@ prompt_interface_up() {
     [yY])
         sudo nmcli connection up static
         inval_guard=false
-        his_name_is_callboy
+        call_menu
         ;;
     [nN])
-        his_name_is_callboy
         inval_guard=false
-        his_name_is_callboy
+        call_menu
         ;;
     *)
         echo "invalid response"
@@ -207,7 +196,8 @@ prompt_interface_up() {
 
 # prompt for optional dns address, if valid, send to confirm, if user opts out, send to confirm with nil dns variable.
 input_dns() {
-    inval_guard=true
+    clear
+    local inval_guard=true
     while $inval_guard; do
         read -p "Do you want to override the system default DNS settings? (y/n) " yn
         case $yn in
@@ -238,6 +228,7 @@ input_dns() {
 
 # prompt for and validate gateway address, send to optional dns function if valid, else prompt again.
 input_gateway_address() {
+    clear
     read -p "Enter your gateway IP address: " gw
     if [[ $gw =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
         input_dns "$1" "$gw"
@@ -250,6 +241,7 @@ input_gateway_address() {
 
 # prompt for and validate ip address, send to gateway address function if valid. else prompt again.
 input_ip_address() {
+    clear
     read -p "Enter an IP address with CIDR notation (e.g., 192.168.1.0/24): " ip
     if [[ $ip =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[1-2][0-9]|3[0-2])$ ]]; then
         input_gateway_address "$ip"
@@ -276,6 +268,7 @@ confirm_net_config() {
     read -p "Please confirm you configuration before applying (y: confirm, n: restart config, or q: quit to main menu) " ynq
     case $confirm in
     [yY])
+        # Check if third param (DNS) is null, format nmcli accordingly and run.
         if [ -z "$3" ]; then
             sudo nmcli connection add con-name static type ethernet ifname "$iface" ipv4.addresses "$1" ipv4.gateway "$2" ipv4.method manual
         else
@@ -287,7 +280,7 @@ confirm_net_config() {
         input_ip_address
         ;;
     [qQ])
-        his_name_is_callboy
+        call_menu
         ;;
     *)
         echo "invalid response"
@@ -319,6 +312,9 @@ configure_networking() {
     esac
 }
 
+# MARK : FILE DELETION
+
+# Simple and dumb delete. Delete all the things. Godspeed.
 delete_all_files() {
     clear
     read -p "This will remove all files and folder from /data/public and /data/groups. Are you sure you want to do this? (y/n) " yn
@@ -326,10 +322,10 @@ delete_all_files() {
     [Yy])
         sudo rm -rf /data/public
         sudo rm -rf /data/groups
-        his_name_is_callboy
+        call_menu
         ;;
     [Nn])
-        his_name_is_callboy
+        call_menu
         ;;
     *)
         echo "invalid option"
@@ -339,21 +335,94 @@ delete_all_files() {
     esac
 }
 
-## MARK: CALLER
+# MARK : GIT CONFIGURATION
+
+# Create SSH config  for user. Lovely lil nested conditionals.
+create_ssh_config() {
+    clear
+    read -p "Please name your ssh key (no spaces allowed) " name
+
+    # Check if it has spaces in it. We don't like spaces.
+    if [[ $name == *" "* ]]; then
+        echo "Invalid name, please try again ..."
+        sleep 1
+        create_ssh_config
+    else
+        # Make sure we aint trying to overwrite anything. Prompt again if we are.
+        if [ -f ~/.ssh/$name ]; then
+            echo "Careful! A key of this name already exists, please enter another name."
+            sleep 1
+            create_ssh_config
+        else
+            echo "Creating SSH key..."
+            ssh-keygen -t rsa -N "" -f ~/.ssh/$name
+            # If they aint got a config file already, make it.
+            if [ ! -f ~/.ssh/config ]; then
+                echo "No existing SSH config file. Creating a new config file..."
+                touch ~/.ssh/config
+            fi
+            # If they already have a config entry for github. Don't make it complicated. Tell them to look at the file.
+            if grep -q "Host github.com" ~/.ssh/config; then
+                echo "You already have a config file entry for github. Please review your config file"
+                sleep 1
+                call_menu
+            else
+                echo -e "\nHost github.com" >>~/.ssh/config
+                echo "  User git" >>~/.ssh/config
+                echo "  IdentityFile ~/.ssh/$name" >>~/.ssh/config
+            fi
+        fi
+    fi
+}
+
+install_git() {
+    local inval_guard=true
+    clear
+
+    # Check if git installed. Silence output - if it aint. install it.
+    if ! command -v git &>/dev/null; then
+        echo "Git is not installed. Installing Git..."
+        sudo dnf install -y git
+    else
+        echo "Git is already installed"
+    fi
+
+    while $inval_guard; do
+        read -p "Would you like to create an SSH key and SSH config file now? (y/n) " yn
+        case $yn in
+        [yY])
+            inval_guard=false
+            create_ssh_config
+            sleep 1
+            call_menu
+            ;;
+        [nN])
+            inval_guard=false
+            call_menu
+            ;;
+        *)
+            echo "invalid response"
+            sleep 1
+            ;;
+        esac
+    done
+}
+
+# MARK: CALLER
 
 # Gives us the multi option prompt and allows us to call functions as we need them.
 # This kind of pattern is useful, because it allows us to block everything away and work on one piece at a time.
 # We don't have to worry about massive entangled blocks. It's a caller basically.
-his_name_is_callboy() {
+call_menu() {
     clear
-    echo -e "\n1) Set Hostname\n2) Create Files and Folders\n3) Create Optional Folders\n4) Configure Networking\n5) Delete folders and files\n6) Quit)\n"
+    echo -e "\n1) Set Hostname\n2) Create Files and Folders\n3) Create Optional Folders\n4) Configure Networking\n5) Delete folders and files\n6) Install Git\n7) Quit\n"
     read -p "Welcome! What would you like to do? " input
     case $input in
     1)
         set_hostname
         ;;
     2)
-        kick_off_flow
+        prompt_num_files
         ;;
     3)
         create_additional_folders
@@ -364,16 +433,19 @@ his_name_is_callboy() {
     5)
         delete_all_files
         ;;
-    6) 
+    6)
+        install_git
+        ;;
+    7)
         exit
-        ;; 
+        ;;
     *)
         echo "invalid option"
         sleep 1
-        his_name_is_callboy
+        call_menu
         ;;
     esac
 }
 
 # Basically shell script loads from top to bottom... so the interpreter runs down the file, gets all my function definitions, and at the last moment we call the caller function to kick this thing off.
-his_name_is_callboy
+call_menu
