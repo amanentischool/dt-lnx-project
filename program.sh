@@ -203,7 +203,7 @@ input_dns() {
         [yY])
             # Not super DRY here. we're repeating logic we already have, but this is easier than redirecting for now.
             read -p "Enter your custom DNS address " dns
-            if [[ $dns =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[1-2][0-9]|3[0-2])$ ]]; then
+            if [[ $dns =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
                 inval_guard=false
                 confirm_net_config "$1" "$2" "$dns"
             else
@@ -239,10 +239,11 @@ input_gateway_address() {
 }
 
 # prompt for and validate ip address, send to gateway address function if valid. else prompt again.
+# these validators are somewhat flawed. They don't take into account valid IP ranges. But atleast it's something.
 input_ip_address() {
     clear
     read -p "Enter an IP address with CIDR notation (e.g., 192.168.1.0/24): " ip
-    if [[ $ip =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    if [[ $ip =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[1-2][0-9]|3[0-2])$ ]]; then
         input_gateway_address "$ip"
     else
         echo "Invalid IP address. Try again"
