@@ -81,12 +81,14 @@ validate_num() {
 
 # Ask user if they want the default folders.
 prompt_for_folders() {
+    clear
     read -p "Would you like to create a set of default folders in data/groups? (y/n) " yn
     case $yn in
     [yY]) make_folders ;;
     [nN])
         echo Okay! Our work here is done.
-        his_name_is_call_boy
+        sleep 1
+        call_menu
         ;;
     *)
         echo invalid response
@@ -107,6 +109,7 @@ create_files() {
 
 # Test to see if there are already files present in target directories. Ask for confirmation before blowing them away.
 test_existing_files() {
+    clear
     file1=/data/public/stuff1/some_file1
     file2=/data/public/stuff2/some_file1
     if test -f "$file1" || test -f "$file2"; then
@@ -126,6 +129,7 @@ test_existing_files() {
 
 # Ask for file size in MB, send to validate.
 prompt_file_size() {
+    clear
     echo "How many MBs would you like the files to be? [must be an integer]. "
     read S
     validate_num $S prompt_file_size test_existing_files
@@ -133,6 +137,7 @@ prompt_file_size() {
 
 # Kicks off file and default folder creation chain, sends user input to validate.
 prompt_num_files() {
+    clear
     echo "How many files would you like to create? [must be an integer]. "
     read N
     validate_num $N prompt_num_files prompt_file_size
@@ -363,8 +368,8 @@ create_ssh_config() {
             fi
 	    # If they already have a config entry for github. Don't make it complicated. Tell them to look at the file.
             if grep -q "Host github.com" ~/.ssh/config; then
-                echo "You already have a config file entry for github. Please review your config file"
-                sleep 1
+                echo "You already have a config file entry for github. Please review your config file."
+                sleep 3
                 call_menu
             else
                 echo -e "\nHost github.com" >>~/.ssh/config
@@ -376,8 +381,8 @@ create_ssh_config() {
 }
 
 install_git() {
-    local inval_guard=true
     clear
+    local inval_guard=true
 
     # Check if git installed. Silence output - if it aint. install it.
     if ! command -v git &>/dev/null; then
