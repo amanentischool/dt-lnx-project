@@ -171,10 +171,9 @@ set_hostname() {
 
 # MARK: NETWORKING
 # IP Validation Regex (https://stackoverflow.com/questions/5284147/validating-ipv4-addresses-with-regexp)
-
 # Ask user if they want to bring the modified interface profile up. Warn that they may be disconnected.
 prompt_interface_up() {
-    clear
+    echo
     read -p "Do you want to bring up your newly configured connection now? WARNING: this will disconnect you if you are connected via SSH. If you choose not to do this now, you will be taken back to the main menu and the configuration will be appplied on reboot. (y/n). " yn
     case $yn in
     [yY])
@@ -204,7 +203,7 @@ input_dns() {
         [yY])
             # Not super DRY here. we're repeating logic we already have, but this is easier than redirecting for now.
             read -p "Enter your custom DNS address " dns
-            if [[ $dns =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            if [[ $dns =~ ^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9]{1,2})\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9]{1,2})$ ]]; then
                 inval_guard=false
                 confirm_net_config "$1" "$2" "$dns"
             else
@@ -214,7 +213,7 @@ input_dns() {
             fi
             ;;
         [nN])
-            $dns=""
+            dns=""
             inval_guard=false
             confirm_net_config "$1" "$2" "$dns"
             ;;
@@ -243,7 +242,7 @@ input_gateway_address() {
 input_ip_address() {
     clear
     read -p "Enter an IP address with CIDR notation (e.g., 192.168.1.0/24): " ip
-    if [[ $ip =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[1-2][0-9]|3[0-2])$ ]]; then
+    if [[ $ip =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
         input_gateway_address "$ip"
     else
         echo "Invalid IP address. Try again"
@@ -266,9 +265,9 @@ confirm_net_config() {
     echo
 
     read -p "Please confirm you configuration before applying (y: confirm, n: restart config, or q: quit to main menu) " ynq
-    case $confirm in
+    case $ynq in
     [yY])
-        # Check if third param (DNS) is null, format nmcli accordingly and run.
+    	# Check if third param (DNS) is null, format nmcli accordingly and run.
         if [ -z "$3" ]; then
             sudo nmcli connection add con-name static type ethernet ifname "$iface" ipv4.addresses "$1" ipv4.gateway "$2" ipv4.method manual
         else
@@ -303,7 +302,7 @@ configure_networking() {
         nmtui
         ;;
     3)
-        his_name_is_call_boy
+	call_menu
         ;;
     *)
         echo "invalid option"
@@ -341,7 +340,7 @@ delete_all_files() {
 create_ssh_config() {
     clear
     read -p "Please name your ssh key (no spaces allowed) " name
-
+    
     # Check if it has spaces in it. We don't like spaces.
     if [[ $name == *" "* ]]; then
         echo "Invalid name, please try again ..."
@@ -361,7 +360,7 @@ create_ssh_config() {
                 echo "No existing SSH config file. Creating a new config file..."
                 touch ~/.ssh/config
             fi
-            # If they already have a config entry for github. Don't make it complicated. Tell them to look at the file.
+	    # If they already have a config entry for github. Don't make it complicated. Tell them to look at the file.
             if grep -q "Host github.com" ~/.ssh/config; then
                 echo "You already have a config file entry for github. Please review your config file"
                 sleep 1
