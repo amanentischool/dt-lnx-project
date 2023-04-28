@@ -203,7 +203,7 @@ input_dns() {
         [yY])
             # Not super DRY here. we're repeating logic we already have, but this is easier than redirecting for now.
             read -p "Enter your custom DNS address " dns
-            if [[ $dns =~ ^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9]{1,2})\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9]{1,2})$ ]]; then
+            if [[ $dns =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[1-2][0-9]|3[0-2])$ ]]; then
                 inval_guard=false
                 confirm_net_config "$1" "$2" "$dns"
             else
