@@ -1,7 +1,6 @@
 # Anthony Manenti - NOS125-150 SP23
 # Interactive shell script combining all scripting and config tasks for NOS125.
 
-# NOTE: I am relatively new at shell scripting. I barely remember how to write loops... but I do understand how flow works in programming languages, and I understand the structures and patterns I need to do certain tasks.
 # This script was put together with a lot of head scratching, trial and error, and googling. THANK YOU Linux forums and StackOverflow ... and Github!
 # Please feel free to use this script as a reference, to build upon it, and improve it.
 
@@ -12,10 +11,10 @@
 # 4) A readme would be nice.
 # 5) Creating an ssh config file after generating an ssh key for a user would be nice. (DONE)
 # 6) Functionality for creating additional users, adding them as sudoers. Setting their passwords.
-# 7) IP address validation. (DONE)
-# 8) Automatic fdisk configuration by piping into fdisk. including automatic mkfs and mount.
-# 9) Option for user to be redirected to fdisk for manual config.
-# 10) Automatic echo /etc/fstab entry for dev/sdc1 so it gets mounted on reboot.
+# 7) IP address validation. (WIP)
+# 8) Automatic fdisk configuration by piping into fdisk. including automatic mkfs and mount. (DONE)
+# 9) Option for user to be redirected to fdisk for manual config. (DONE)
+# 10) Automatic echo /etc/fstab entry for dev/sdc1 so it gets mounted on reboot. (DONE)
 # 11) Generally I think clearing the users terminal is a good thing. There may be certain sections where keeping some of the history visible is beneficial. Look into it and clean it up where needed. (DONE)
 # 12) Make an array of Linux / Dad jokes and add a random joke picker function to the main menu where a random joke is picked and display.
 # 13) Option to install git. (DONE)
@@ -34,7 +33,7 @@ create_additional_folders() {
         done
         should_continue=false
         echo Okay! Our work here is done.
-        sleep 1
+        sleep 2
         call_menu
     }
 
@@ -71,7 +70,7 @@ validate_num() {
     isnum='^[0-9]+$'
     if ! [[ $1 =~ $isnum ]]; then
         echo error: Not a number. Try again.
-        sleep 1
+        sleep 2
         $2
     else
         clear
@@ -87,7 +86,7 @@ prompt_for_folders() {
     [yY]) make_folders ;;
     [nN])
         echo Okay! Our work here is done.
-        sleep 1
+        sleep 2
         call_menu
         ;;
     *)
@@ -168,7 +167,7 @@ set_hostname() {
             ;;
         *)
             echo invalid response
-            sleep 1
+            sleep 2
             ;;
         esac
     done
@@ -192,7 +191,7 @@ prompt_interface_up() {
         ;;
     *)
         echo "invalid response"
-        sleep 1
+        sleep 2
         prompt_interface_up
         ;;
     esac
@@ -213,7 +212,7 @@ input_dns() {
                 confirm_net_config "$1" "$2" "$dns"
             else
                 echo "Invalid IP address."
-                sleep 1
+                sleep 2
                 clear
             fi
             ;;
@@ -224,7 +223,7 @@ input_dns() {
             ;;
         *)
             echo "invalid response"
-            sleep 1
+            sleep 2
             ;;
         esac
     done
@@ -238,7 +237,7 @@ input_gateway_address() {
         input_dns "$1" "$gw"
     else
         echo "Invalid IP address."
-        sleep 1
+        sleep 2
         input_gateway_address
     fi
 }
@@ -252,7 +251,7 @@ input_ip_address() {
         input_gateway_address "$ip"
     else
         echo "Invalid IP address. Try again"
-        sleep 1
+        sleep 2
         input_ip_address
     fi
 }
@@ -262,6 +261,7 @@ confirm_net_config() {
     clear
     # This is running the IP link command and then using AWK to find the first line that starts with a number, followed by a colon and then a space and then the letter e, which is the interface we want to change.
     iface=$(ip link | awk -F': ' '/^[0-9]+: e/{print $2; exit}')
+
     # print config back to user for confirmation.
     echo
     echo "IP : $1"
@@ -273,7 +273,7 @@ confirm_net_config() {
     read -p "Please confirm you configuration before applying (y: confirm, n: restart config, or q: quit to main menu) " ynq
     case $ynq in
     [yY])
-    	# Check if third param (DNS) is null, format nmcli accordingly and run.
+        # Check if third param (DNS) is null, format nmcli accordingly and run.
         if [ -z "$3" ]; then
             sudo nmcli connection add con-name static type ethernet ifname "$iface" ipv4.addresses "$1" ipv4.gateway "$2" ipv4.method manual
         else
@@ -289,7 +289,7 @@ confirm_net_config() {
         ;;
     *)
         echo "invalid response"
-        sleep 1
+        sleep 2
         confirm_net_config
         ;;
     esac
@@ -305,13 +305,14 @@ configure_networking() {
         input_ip_address
         ;;
     2)
-        nmtui
+        sudo nmtui
         ;;
     3)
-	call_menu
+        call_menu
         ;;
     *)
         echo "invalid option"
+        sleep 2
         configure_networking
         ;;
     esac
@@ -334,7 +335,7 @@ delete_all_files() {
         ;;
     *)
         echo "invalid option"
-        sleep 1
+        sleep 2
         delete_all_files
         ;;
     esac
@@ -346,17 +347,17 @@ delete_all_files() {
 create_ssh_config() {
     clear
     read -p "Please name your ssh key (no spaces allowed) " name
-    
+
     # Check if it has spaces in it. We don't like spaces.
     if [[ $name == *" "* ]]; then
         echo "Invalid name, please try again ..."
-        sleep 1
+        sleep 2
         create_ssh_config
     else
         # Make sure we aint trying to overwrite anything. Prompt again if we are.
         if [ -f ~/.ssh/$name ]; then
             echo "Careful! A key of this name already exists, please enter another name."
-            sleep 1
+            sleep 2
             create_ssh_config
         else
             echo "Creating SSH key..."
@@ -366,7 +367,7 @@ create_ssh_config() {
                 echo "No existing SSH config file. Creating a new config file..."
                 touch ~/.ssh/config
             fi
-	    # If they already have a config entry for github. Don't make it complicated. Tell them to look at the file.
+            # If they already have a config entry for github. Don't make it complicated. Tell them to look at the file.
             if grep -q "Host github.com" ~/.ssh/config; then
                 echo "You already have a config file entry for github. Please review your config file."
                 sleep 3
@@ -380,6 +381,7 @@ create_ssh_config() {
     fi
 }
 
+# It do what it says it do.
 install_git() {
     clear
     local inval_guard=true
@@ -398,7 +400,7 @@ install_git() {
         [yY])
             inval_guard=false
             create_ssh_config
-            sleep 1
+            sleep 2
             call_menu
             ;;
         [nN])
@@ -407,10 +409,135 @@ install_git() {
             ;;
         *)
             echo "invalid response"
-            sleep 1
+            sleep 2
             ;;
         esac
     done
+}
+
+# MARK : STORAGE CONFIGURATION
+
+# Automated flow for disk configuration in spec with NOS-125 requirements. Create /etc/fstab entry for automatic mounting.
+auto_config_storage() {
+    clear
+
+    # if /data doesn' exist make it.
+    if [ ! -d /data ]; then
+        sudo mkdir /data
+    fi
+
+    # Guard clause. If we already have our partition set up. do nothing.
+    if lsblk -f /dev/sdc1 >/dev/null 2>&1; then
+        echo "/dev/sdc1 has already been configured or already contains a file system. Automatic configuration is risky."
+        echo "The script will return you to the storage configuration menu..."
+        sleep 3
+        prompt_config_storage
+    fi
+
+    # CREDIT : S. White (GitHub:whites3507) - https://github.com/NOS-DTCC-SW/NOS125-SP23/blob/main/scripted_commands
+    echo -e "n\np\n1\n\n\nw" | sudo fdisk /dev/sdc
+    sudo mkfs.ext4 /dev/sdc1
+    sudo chown $USER:$USER -R /data
+    sudo mount /dev/sdc1 /data
+
+    # Check to see if we already have an /etc/fstab entry for /dev/sdc.
+    # It's possible the user may have executed the script before. We don't need to litter the file up.
+    if grep -q /dev/sdc1 /etc/fstab; then
+        echo "/dev/sdc has been automatically configured. Returning to main menu..."
+    else
+        # Learned something new here... you can't echo into a protected system file without tee apparently... https://stackoverflow.com/questions/84882/sudo-echo-something-etc-privilegedfile-doesnt-work
+        echo "/dev/sdc1    $/dev/sdc1    auto    defaults    0    0" | sudo tee -a /etc/fstab >/dev/null
+        echo "Added entry for /dev/sdc1 in /etc/fstab"
+        echo "/dev/sdc has been automatically configured. Returning to main menu..."
+    fi
+
+    sleep 3
+    call_menu
+}
+
+# Check to see if /dev/sdc even exists. Check to see if a folder already exists at /data - if it does it might have data.
+# If /dev/sdc exists, advance prompt. If not bounce user out and tell them to figure themselves out.
+check_storage() {
+    clear
+    if lsblk -f /dev/sdc >/dev/null 2>&1; then
+        if [ -d /data ]; then
+            echo -e "WARNING: You already have a folder located at /data. This script will mount a drive at that location. If there is data present in this folder it will become hidden until the drive is unmounted.\n"
+            read -p "Are you sure you wish to continue? (y: continue, n: exit) " input
+            case $input in
+            [yY])
+                auto_config_storage
+                ;;
+            [nN])
+                call_menu
+                ;;
+            *)
+                echo "invalid input"
+                sleep 2
+                check_storage
+                ;;
+            esac
+        else
+            auto_config_storage
+        fi
+    else
+        echo "Please check your storage configuration /dev/sdc is not a attached storage device"
+        sleep 2
+        call_menu
+    fi
+}
+
+# Confirmation dialog and commands for zeroing disks.
+confirm_destroy() {
+    clear
+    echo "Woah! Let's not to be hasty... This is going to delete everything on /dev/sdc!"
+    read -p "Are you sure about this? (y/n) " yn
+    case $yn in
+    [yY])
+        echo -e "\n As you wish... Nuking everything. Remind me not to get on your bad side. \n"
+        sudo umount /dev/sdc >/dev/null 2>&1
+        sudo dd if=/dev/zero of=/dev/sdc status=progress
+        sleep 2
+        prompt_config_storage
+        ;;
+    [nN])
+        prompt_config_storage
+        ;;
+    *)
+        echo invalid response
+        sleep 2
+        confirm_destroy
+        ;;
+    esac
+}
+
+# Multi choice menu for different storage configuration options
+prompt_config_storage() {
+    clear
+    echo -e "\n1) I want to use this script to automatically configure /dev/sdc\n2) I want to use fdisk to manually configure /dev/sdc\n3) Unmount /dev/sdc1\n4) Unmount and zero /dev/sdc\n5) Quit \n"
+    read -p "How can I help you today? " input
+    case $input in
+    1)
+        check_storage
+        ;;
+    2)
+        sudo fdisk /dev/sdc
+        ;;
+    3)
+        sudo umount /dev/sdc1
+        ;;
+    4)
+        confirm_destroy
+        ;;
+    5)
+        call_menu
+        ;;
+    *)
+        echo "invalid option"
+        sleep 2
+        prompt_config_storage
+        ;;
+    esac
+
 }
 
 # MARK: CALLER
@@ -420,7 +547,7 @@ install_git() {
 # We don't have to worry about massive entangled blocks. It's a caller basically.
 call_menu() {
     clear
-    echo -e "\n1) Set Hostname\n2) Create Files and Folders\n3) Create Optional Folders\n4) Configure Networking\n5) Delete folders and files\n6) Install Git\n7) Quit\n"
+    echo -e "\n1) Set Hostname\n2) Create Files and Folders\n3) Create Optional Folders\n4) Configure Networking\n5) Delete folders and files\n6) Install Git\n7) Configure Storage\n8) Quit\n"
     read -p "Welcome! What would you like to do? " input
     case $input in
     1)
@@ -442,11 +569,14 @@ call_menu() {
         install_git
         ;;
     7)
+        prompt_config_storage
+        ;;
+    8)
         exit
         ;;
     *)
         echo "invalid option"
-        sleep 1
+        sleep 2
         call_menu
         ;;
     esac
