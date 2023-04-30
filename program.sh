@@ -13,6 +13,13 @@
 # 5) IP address validation. (WIP)
 # 6) Make an array of Linux / Dad jokes and add a random joke picker function to the main menu where a random joke is picked and display.
 
+# COLOR HELPERS
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No color
+
 # MARK: CALLER
 
 # Gives us the multi option prompt and allows us to call functions as we need them.
@@ -142,7 +149,24 @@ prompt_default_folders() {
 
 prompt_num_folders() {
     clear
-    echo "This script will create a collection of folders for you (if they do not already exist), labled folder[1..X] (max: 10) in data/public."
+    existing_scripted_dirs=()
+    happy_dirs=()
+    sad_dirs=()
+
+    # Populate existing_scripted_dirs array
+    for i in {1..10}; do
+        if [ -d "/data/public/folder$i" ]; then
+            existing_scripted_dirs+=("folder$i")
+        fi
+    done
+
+    if [ "${#existing_scripted_dirs[@]}" -eq 10 ]; then
+        echo -e "\nYou have already created all possible scripted directories in /data/public\n"
+        sleep 2
+        test_existing_files
+    fi
+
+    echo -e "\nThis script will create a collection of folders for you (if they do not already exist), labled folder[1..X] (max: 10) in data/public.\n"
     read -p "How many folders do you want? " nF
 
     isnum='^[0-9]$|^10$'
@@ -151,9 +175,13 @@ prompt_num_folders() {
         sleep 2
         prompt_num_folders
     else
-        clear
         for i in $(seq 1 $nF); do
-            sudo mkdir -p /data/public/folder$i
+            folder="/data/public/folder$i"
+            if [ -d "$folder" ]; then
+                sad_dirs+=("folder$i")
+            elif sudo mkdir -p "$folder" >/dev/null 2>&1; then
+                happy_dirs+=("folder$i")
+            fi
         done
         test_existing_files
     fi
@@ -161,18 +189,32 @@ prompt_num_folders() {
 
 # Test to see if there are already files present in target directories. Ask for confirmation before blowing them away.
 test_existing_files() {
-    dirs=($(ls -d /data/public/*/ | xargs -n1 basename))
-    local inval_guard=true
-
     clear
+    all_dirs=($(ls -d /data/public/*/ | xargs -n1 basename))
+    
+    if [ "${#happy_dirs[@]}" -gt 0 ]; then
+        echo -e "New directories:\n"
+        for dir in "${happy_dirs[@]}"; do
+            echo -e "${GREEN}$dir${NC}"
+        done
+    fi
 
-    echo -e "$nF folder(s) created\n"
-    echo -e "Folders in /data/public :\n"
-    printf "%-10s" "${dirs[@]}"
+    if [ "${#sad_dirs[@]}" -gt 0 ]; then
+        echo -e "\nExisting directories:\n"
+        for dir in "${sad_dirs[@]}"; do
+            echo -e "${YELLOW}$dir${NC}"
+        done
+    fi
+
+    echo -e "\nFolders currently present in /data/public:\n"
+    for dir in "${all_dirs[@]}"; do
+        printf "${BLUE}%-10s${NC}" "$dir"
+    done
     echo -e "\n"
-    read -p "What directory would you like to write the files to? (name must appear in list) " target
 
-    if grep -q "$target" <<<"${dirs[*]}"; then
+    local inval_guard=true
+    read -p "What directory would you like to write the files to? (name must appear in list) " target
+    if grep -q "$target" <<<"${all_dirs[*]}"; then
         if [[ -z $(ls -A "/data/public/$target") ]]; then
             create_files
         else
@@ -243,7 +285,7 @@ delete_all_files() {
 
 # MARK: NETWORKING
 
-# allows user to use our wizard for network config through nmcli command formatting, or opt to use nmcli
+# allows user to use our wizard for network config through nmcli command formatting, or opt to use nmtui
 configure_networking() {
     clear
     echo -e "\n1) I want to use this script to configure network settings \n2) I want to use nmtui to configure network settings \n\nQ) Quit \n"
@@ -406,8 +448,6 @@ install_git() {
         [yY])
             inval_guard=false
             create_ssh_config
-            sleep 2
-            call_menu
             ;;
         [nN])
             inval_guard=false
@@ -454,6 +494,7 @@ create_ssh_config() {
                 echo -e "\nHost github.com" >>~/.ssh/config
                 echo "  User git" >>~/.ssh/config
                 echo "  IdentityFile ~/.ssh/$name" >>~/.ssh/config
+                call_menu
             fi
         fi
     fi
@@ -526,8 +567,7 @@ check_storage() {
 # Automated flow for disk configuration in spec with NOS-125 requirements. Create /etc/fstab entry for automatic mounting.
 auto_config_storage() {
     clear
-
-    # if /data doesn' exist make it.
+    # if /data doesn't exist make it.
     if [ ! -d /data ]; then
         sudo mkdir /data
     fi
@@ -553,7 +593,6 @@ auto_config_storage() {
         echo "/dev/sdc1    $/dev/sdc1    auto    defaults    0    0" | sudo tee -a /etc/fstab >/dev/null
         echo "Added entry for /dev/sdc1 in /etc/fstab"
     fi
-
     sleep 3
     call_menu
 }
