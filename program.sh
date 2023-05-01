@@ -161,8 +161,6 @@ prompt_num_folders() {
 
     # If folder[1..10] already exists, there's no reason to prompt the user to recreate them.
     if [ "${#existing_scripted_dirs[@]}" -eq 10 ]; then
-        echo -e "\nYou have already created all possible scripted directories in /data/public\n"
-        sleep 2
         test_existing_files
     fi
 
@@ -182,7 +180,7 @@ prompt_num_folders() {
             if [ -d "$folder" ]; then
                 sad_dirs+=("folder$i")
             else
-                # else push to another array to list to the user, and make the folder. 
+                # else push to another array to list to the user, and make the folder.
                 sudo mkdir -p "$folder"
                 happy_dirs+=("folder$i")
             fi
@@ -195,7 +193,7 @@ prompt_num_folders() {
 test_existing_files() {
     clear
     all_dirs=($(ls -d /data/public/*/ | xargs -n1 basename))
-    
+
     if [ "${#happy_dirs[@]}" -gt 0 ]; then
         echo -e "New directories:\n"
         for dir in "${happy_dirs[@]}"; do
