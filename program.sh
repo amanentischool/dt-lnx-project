@@ -102,7 +102,6 @@ prompt_num_files() {
     if ! [[ $N =~ $isnum ]]; then
         echo error: Not a number. Try again.
         prompt_num_files
-        $2
     else
         prompt_file_size
     fi
@@ -160,6 +159,7 @@ prompt_num_folders() {
         fi
     done
 
+    # If folder[1..10] already exists, there's no reason to prompt the user to recreate them.
     if [ "${#existing_scripted_dirs[@]}" -eq 10 ]; then
         echo -e "\nYou have already created all possible scripted directories in /data/public\n"
         sleep 2
@@ -175,11 +175,15 @@ prompt_num_folders() {
         sleep 2
         prompt_num_folders
     else
+        # If this was any more complicated, this approach would be too brittle.
+        # We're taking in the user input for number of folders they want, appending it to a search string, pushing it to an array to list to the user and doing nothing if we find it.
         for i in $(seq 1 $nF); do
             folder="/data/public/folder$i"
             if [ -d "$folder" ]; then
                 sad_dirs+=("folder$i")
-            elif sudo mkdir -p "$folder" >/dev/null 2>&1; then
+            else
+                # else push to another array to list to the user, and make the folder. 
+                sudo mkdir -p "$folder"
                 happy_dirs+=("folder$i")
             fi
         done
@@ -250,7 +254,7 @@ test_existing_files() {
     fi
 }
 
-# Create the files and call the prompt which allows users to decide if they want default folders created.
+# Create the files.
 create_files() {
     for i in $(seq 1 $N); do
         sudo dd if=/dev/zero of=/data/public/$target/some_file$i bs=$S count=1
