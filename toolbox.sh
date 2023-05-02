@@ -616,7 +616,7 @@ auto_config_storage() {
     # It's possible the user may have executed the script before. We don't need to litter the file up.
     if ! grep -q /dev/sdc1 /etc/fstab; then
         # Learned something new here... you can't echo into a protected system file without tee apparently... https://stackoverflow.com/questions/84882/sudo-echo-something-etc-privilegedfile-doesnt-work
-        echo "/dev/sdc1    $/dev/sdc1    auto    defaults    0    0" | sudo tee -a /etc/fstab >/dev/null
+        echo "/dev/sdc1    /dev/sdc1    auto    defaults    0    0" | sudo tee -a /etc/fstab >/dev/null
         echo "Added entry for /dev/sdc1 in /etc/fstab"
     fi
     sleep 3
