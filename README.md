@@ -15,18 +15,18 @@ It has a growing list of features including :
 5) Git configuration
 6) Storage configuration
 
-## Here are some of the examples of the user friendly menus the tool provides : 
+### Here are some of the examples of the user friendly menus the tool provides : 
 
-![Tux Linux Mascot](https://github.com/manentia9328/dt-lnx-project/blob/main/docs/assets/example1.jpg?raw=true)
+![Example of a menu](https://github.com/manentia9328/dt-lnx-project/blob/main/docs/assets/example1.jpg?raw=true)
 
-![Tux Linux Mascot](https://github.com/manentia9328/dt-lnx-project/blob/main/docs/assets/example2.jpg?raw=true)
+![Example of a menu](https://github.com/manentia9328/dt-lnx-project/blob/main/docs/assets/example2.jpg?raw=true)
 
-![Tux Linux Mascot](https://github.com/manentia9328/dt-lnx-project/blob/main/docs/assets/example3.jpg?raw=true)
+![Example of a menu](https://github.com/manentia9328/dt-lnx-project/blob/main/docs/assets/example3.jpg?raw=true)
 
 ***
 
 # LICENSE
-## Tux Toolbox is licensed under the MIT license 
+### Tux Toolbox is licensed under the MIT license 
 
 Copyright (c) 2023 Anthony J. Manenti
 
