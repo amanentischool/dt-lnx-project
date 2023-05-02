@@ -17,11 +17,11 @@ It has a growing list of features including :
 
 ### Here are some of the examples of the user friendly menus the tool provides : 
 
-![Example of a menu](https://github.com/manentia9328/dt-lnx-project/blob/main/docs/assets/example1.jpg?raw=true)
+![Example of a menu](https://github.com/manentia9328/dt-lnx-project/blob/main/docs/assets/example1.png?raw=true)
 
-![Example of a menu](https://github.com/manentia9328/dt-lnx-project/blob/main/docs/assets/example2.jpg?raw=true)
+![Example of a menu](https://github.com/manentia9328/dt-lnx-project/blob/main/docs/assets/example2.png?raw=true)
 
-![Example of a menu](https://github.com/manentia9328/dt-lnx-project/blob/main/docs/assets/example3.jpg?raw=true)
+![Example of a menu](https://github.com/manentia9328/dt-lnx-project/blob/main/docs/assets/example3.png?raw=true)
 
 ***
 
