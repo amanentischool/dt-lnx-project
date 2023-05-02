@@ -87,7 +87,7 @@ set_hostname() {
     read -p "Please enter your hostname : " hostname
     while $inval_guard; do
         echo -e "\nYour new hostname will be : $hostname\n"
-        read -p  "Please confirm this change. (y/n) (q: quit without saving) " ynq
+        read -p "Please confirm this change. (y/n) (q: quit without saving) " ynq
         case $ynq in
         [yY])
             inval_guard=false
@@ -502,17 +502,17 @@ create_ssh_config() {
             echo "Creating SSH key..."
             ssh-keygen -t rsa -N "" -f ~/.ssh/$name
             # If they already have a config entry for github. Don't make it complicated. Tell them to look at the file.
-            if grep -q "Host github.com" ~/.ssh/config; then
+            if grep -q "Host github.com" ~/.ssh/config 2>/dev/null; then
                 echo "You already have a config file entry for github. Please review your config file."
-                sleep 3
-                call_menu
             else
                 echo -e "\nHost github.com" >>~/.ssh/config
                 echo "  User git" >>~/.ssh/config
                 echo "  IdentityFile ~/.ssh/$name" >>~/.ssh/config
-                call_menu
             fi
         fi
+        echo -e "\nAutomatic configuration of Git complete"
+        sleep 3
+        call_menu
     fi
 }
 
