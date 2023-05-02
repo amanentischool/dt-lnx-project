@@ -86,7 +86,8 @@ set_hostname() {
     echo -e "\n${YELLOW}$heading : HOSTNAME CONFIG${NC}\n"
     read -p "Please enter your hostname : " hostname
     while $inval_guard; do
-        read -p "Your new hostname will be : $hostname Please confirm this change. (y/n) (q: quit without saving) " ynq
+        echo -e "\nYour new hostname will be : $hostname\n"
+        read -p  "Please confirm this change. (y/n) (q: quit without saving) " ynq
         case $ynq in
         [yY])
             inval_guard=false
@@ -256,7 +257,6 @@ test_existing_files() {
                 [dD])
                     inval_guard=false
                     sudo rm -rf /data/public/$target/*
-                    sleep 20
                     create_files
                     ;;
                 *)
