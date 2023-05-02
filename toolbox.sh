@@ -168,8 +168,7 @@ prompt_default_folders() {
 
 prompt_num_folders() {
     existing_scripted_dirs=()
-    happy_dirs=()
-    sad_dirs=()
+    new_scripted_dirs=()
 
     clear
     echo -e "\n${YELLOW}$heading : FILES AND FOLDERS${NC}\n"
@@ -198,12 +197,9 @@ prompt_num_folders() {
         # If this was any more complicated, this approach would be too brittle.
         # We're taking in the user input for number of folders they want, appending it to a search string, pushing it to an array to list to the user and doing nothing if we find it.
         for i in $(seq 1 $nF); do
-            if [ -d "/data/public/folder$i" ]; then
-                sad_dirs+=("folder$i")
-            else
-                # else push to another array to list to the user, and make the folder.
+            if ! [ -d "/data/public/folder$i" ]; then
                 sudo mkdir -p "/data/public/folder$i"
-                happy_dirs+=("folder$i")
+                new_scripted_dirs+=("folder$i")
             fi
         done
         test_existing_files
@@ -216,16 +212,16 @@ test_existing_files() {
     clear
     echo -e "\n${YELLOW}$heading : FILES AND FOLDERS${NC}\n"
 
-    if [ "${#happy_dirs[@]}" -gt 0 ]; then
+    if [ "${#new_scripted_dirs[@]}" -gt 0 ]; then
         echo -e "New directories:\n"
-        for dir in "${happy_dirs[@]}"; do
+        for dir in "${new_scripted_dirs[@]}"; do
             echo -e "${GREEN}$dir${NC}"
         done
     fi
 
-    if [ "${#sad_dirs[@]}" -gt 0 ]; then
+    if [ "${#existing_scripted_dirs[@]}" -gt 0 ]; then
         echo -e "\nExisting directories:\n"
-        for dir in "${sad_dirs[@]}"; do
+        for dir in "${existing_scripted_dirs[@]}"; do
             echo -e "${YELLOW}$dir${NC}"
         done
     fi
