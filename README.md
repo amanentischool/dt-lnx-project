@@ -8,7 +8,7 @@
 <br>
 Tux toolbox contains several automated functions which were designed to the specifications given in NOS125-150 SP23
 <br>
-## NOTE: In it's current state Tux Toolbox is intended to be used as a learning tool. Under no circumstances should you use it outside of a testing environment.
+### NOTE: In it's current state Tux Toolbox is intended to be used as a learning tool. Under no circumstances should you use it outside of a testing environment.
 
 It has a growing list of features including : 
 
