@@ -5,9 +5,11 @@
 ![Tux Linux Mascot](https://github.com/manentia9328/dt-lnx-project/blob/main/docs/assets/tux-new.jpg?raw=true)
 
 ### Tux toolbox is an interactive shell script designed to make linux configuration more friendly to beginners!
-Tux toolbox contains several automated functions which were designed to the specifications given in NOS125-150 SP23
 
 ### NOTE: Tux Toolbox is intended to be used as a learning tool. Under no circumstances should you use it outside of a testing environment.
+
+Tux toolbox contains several automated functions which were designed to the specifications given in NOS125-150 SP23
+
 
 It has a growing list of features including : 
 
